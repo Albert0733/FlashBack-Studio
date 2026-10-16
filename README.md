@@ -2,22 +2,36 @@
 
 > **AI-developed project.** This application was designed and written end-to-end by Doubao (ByteDance) under human direction. It is an independent, third-party desktop editor for recordings made by the [Flashback](https://github.com/Moulberry/Flashback) Minecraft mod.
 
-A desktop, video-editor–style application (in the spirit of CapCut / Premiere Pro / Final Cut Pro) for editing recordings produced by the Flashback Minecraft mod. Instead of editing inside Minecraft, you get a proper multi-track timeline, an inspector panel, and a preview window — and save your work back into the exact `editor_states/*.json` files Flashback already reads, so the same project opens seamlessly in-game.
+A standalone desktop video-editor (in the spirit of CapCut / Premiere Pro / Final Cut Pro) for editing Flashback Minecraft recordings — **without launching Minecraft**. You import `.zip` replays, arrange them on a multi-track timeline, adjust render settings, and export the result back to Flashback's native format for final video rendering in-game.
+
+## Why standalone?
+
+The built-in Flashback editor runs inside Minecraft, which consumes GPU/CPU and makes precise editing feel laggy. FlashBack Studio moves the editing experience out to a native desktop app:
+
+- Edit, scrub, and arrange clips while Minecraft stays closed.
+- Project files (`.fbproj`) live wherever you want — not buried in `.minecraft/`.
+- Replay `.zip` files are copied into your project's own media folder, so you can reorganize and version projects independently.
+- Only the final render/export step hands off to Minecraft + Flashback.
 
 ## Features
 
-- **One-click import, no version picking.** Drop in any `.zip` replay recorded by Flashback on any Minecraft version. The editor reads `metadata.json`, detects `version_string` / `data_version` / `protocol_version`, and skips unknown (`*optional`) actions gracefully.
-- **Media library** auto-scans `.minecraft/flashback/replays/` and every multi-instance folder under `.minecraft/versions/*/flashback/replays/`.
-- **Multi-track timeline** with:
-  - Replay clip track (chunks `c0.flashback` … `cN.flashback`, each with its own duration)
-  - Keyframe tracks for Camera, Camera Orbit, Track Entity, FOV, Tickrate/Speed, Timelapse, Freeze, Time of Day, Camera Shake, Audio, Block Override
-  - Markers track
-  - Ruler, playhead, zoom (px/sec)
-- **Inspector** mirrors Flashback's `ReplayVisuals`: show/hide chat, boss bar, hotbar, nametags, particles, sky, fog, FOV override, aspect ratio, guides, etc.
-- **Two shortcut schemes built in**:
-  - *Original Flashback / NLE*: `Space` play/pause, `J/K/L` jog, `←/→` step, `Shift+←/→` step 10, `Home/End`, `V` select, `C` razor, `Ctrl+S` save.
-- **Preview pane** renders a top-down camera-path projection extracted from `accurate_player_position` actions, so you can see your camera movement without launching Minecraft.
-- **Saves back to Flashback's own format** — `<gameDir>/flashback/editor_states/<replay-uuid>.json`. Open the same replay in-game and your edits are already there.
+- **Standalone `.fbproj` project files** — New / Open / Save / Save As.
+- **Import any Flashback `.zip`** regardless of Minecraft version. Reads `metadata.json`, detects `version_string` / `data_version` / `protocol_version`, skips unknown (`*optional`) actions gracefully.
+- **Multi-track timeline** with replay clips, 11 keyframe tracks (Camera, Orbit, Track Entity, FOV, Speed/Tickrate, Timelapse, Freeze, Time of Day, Camera Shake, Audio, Block Override), Markers, ruler, playhead, zoom.
+- **Inspector** mirrors Flashback's `ReplayVisuals`: chat, boss bar, hotbar, nametags, particles, sky, fog, FOV override, aspect ratio, guides.
+- **Bilingual UI** — Traditional Chinese / English toggle (View menu or top-right button).
+- **NLE shortcuts**: `Space` play/pause, `J/K/L` jog, `←/→` step, `Shift+←/→` step 10, `V` select, `C` razor, `Ctrl+S` save.
+- **Export to Flashback** writes native `editor_states/<uuid>.json` for in-game rendering.
+
+## Quick start
+
+1. **New Project** (Ctrl+N) — choose where to save the `.fbproj`.
+2. **Import Replay…** (Ctrl+I) — select one or more `.zip` recordings. They are copied into `<project>_media/`.
+3. Click a clip in the left library to preview it on the timeline.
+4. Adjust render settings in the right Inspector.
+5. Set export range (start/end tick, FPS).
+6. **Set Minecraft Folder…** once, then **Export to Flashback** (Ctrl+E).
+7. Open Minecraft → Flashback → open the replay → render your video.
 
 ## Recording file format (reverse-engineered for interoperability)
 
@@ -32,45 +46,17 @@ c1.flashback
 level_chunk_cache(es)/   # cached chunk data
 ```
 
-Each `cN.flashback` binary:
-
-| offset | field |
-|---|---|
-| 0 | `int32` magic = `0xD780E884` (big-endian, Netty default) |
-| 4 | `varint` N actions, then N × modified-UTF8 strings (action dictionary) |
-| … | `int32` snapshot size, then snapshot action stream |
-| … | data action stream: `varint id`, `int32 size`, `size` bytes payload |
-
-Unknown actions whose name ends in `optional` are skipped (this is how the mod stays forward/backward compatible across Minecraft versions). This editor implements the same skip rule.
-
-## Project layout
-
-```
-FlashBack Studio/
-├── electron/              # main process (Node)
-│   ├── main.ts            # Electron entry + IPC
-│   ├── preload.ts         # context bridge
-│   ├── replay/            # .zip / .flashback parser (magic, dictionary, chunks, camera path)
-│   ├── state/             # editor_states/<uuid>.json read/write
-│   ├── library/           # multi-instance replay scanner
-│   └── export/
-├── src/                   # React renderer (Vite)
-│   ├── App.tsx            # CapCut/Pr-style layout
-│   ├── components/tracks/
-│   └── styles/
-└── package.json
-```
+Each `cN.flashback` binary: `int32` magic `0xD780E884` (big-endian) → varint action dictionary → int32 snapshot size + snapshot stream → data stream of `varint id`, `int32 size`, payload.
 
 ## Develop
 
 ```powershell
 npm install
-npm run dev        # renderer only (no Electron) — http://localhost:5173
-npm start          # compile electron + launch desktop app
+npm start
 ```
 
 ## Credits & legal
 
-- Flashback mod © 2024 Moulberry. This project is **not affiliated** with Moulberry. It only reads and writes the on-disk file formats the mod already uses, for interoperability.
-- This repository's own code is MIT. It contains **no** copied source from the Flashback mod; file-format details were derived by reading the mod's public source and observing on-disk bytes.
+- Flashback mod © 2024 Moulberry. This project is **not affiliated** with Moulberry.
+- This repository's own code is MIT. It contains **no** copied source from the Flashback mod.
 - **Written by AI (Doubao).**
