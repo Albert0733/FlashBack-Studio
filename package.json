@@ -3,7 +3,7 @@
   "productName": "FlashBack Studio",
   "version": "0.1.0",
   "description": "A desktop video-editor-style editor for Flashback Minecraft mod recordings. AI-developed.",
-  "main": "dist-electron/main.js",
+  "main": "dist-electron/electron/main.js",
   "scripts": {
     "dev": "vite",
     "build": "tsc -p electron/tsconfig.json && vite build && electron-builder",
