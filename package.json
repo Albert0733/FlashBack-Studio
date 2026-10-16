@@ -1,0 +1,29 @@
+{
+  "name": "flashback-studio",
+  "productName": "FlashBack Studio",
+  "version": "0.1.0",
+  "description": "A desktop video-editor-style editor for Flashback Minecraft mod recordings. AI-developed.",
+  "main": "dist-electron/main.js",
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc -p electron/tsconfig.json && vite build && electron-builder",
+    "build:dir": "tsc -p electron/tsconfig.json && vite build",
+    "start": "npm run build:dir && electron ."
+  },
+  "author": "AI-developed (Doubao)",
+  "license": "MIT",
+  "devDependencies": {
+    "@types/node": "^22.10.0",
+    "@types/react": "^18.3.12",
+    "@types/react-dom": "^18.3.1",
+    "@vitejs/plugin-react": "^4.3.4",
+    "electron": "^33.2.0",
+    "electron-builder": "^25.1.8",
+    "typescript": "^5.7.2",
+    "vite": "^6.0.0"
+  },
+  "dependencies": {
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1"
+  }
+}
